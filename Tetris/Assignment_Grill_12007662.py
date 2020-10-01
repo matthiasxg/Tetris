@@ -1,6 +1,6 @@
 # Tetris - DYOA Advanced at TU Graz WS 2020
-# Name:       YOUR_NAME
-# Student ID: YOUR_STUDENT_ID
+# Name:       MATTHIAS GRILL
+# Student ID: 12007662
 
 import pygame, sys, time, random
 from pygame.locals import *
@@ -10,17 +10,17 @@ from framework import BaseGame
 class Block:
     blocknames = ['clevelandZ', 'rhodeIslandZ', 'blueRicky', 'smashBoy', 'orangeRicky', 'teewee', 'hero']
     def __init__(self, game, block_name):
-        self.name = None  # TODO set name / Can be 'hero', 'teewee', ...
-        self.rotation = 0  # TODO randomize rotation (e.g. 0, 1, 2, 3; Hint: different number of rotations per block)
+        self.name = "Matthias"  # TODO set name / Can be 'hero', 'teewee', ...
+        self.rotation = 2  # TODO randomize rotation (e.g. 0, 1, 2, 3; Hint: different number of rotations per block)
         self.set_shape(game.block_list[self.name][self.rotation])
         self.x = int(game.board_width / 2) - int(self.width / 2)
         self.y = 0
-        self.color = None  # TODO Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
+        self.color = "red"  # TODO Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
 
     def set_shape(self, shape):
         self.shape = shape
-        self.width = 0  # TODO Calculate the correct width
-        self.height = 0  # TODO Calculate the correct height
+        self.width = 10  # TODO Calculate the correct width
+        self.height = 10  # TODO Calculate the correct height
 
     def right_rotation(self):
         # TODO rotate block once clockwise
@@ -94,7 +94,7 @@ class Game(BaseGame):
     # Returns the newly created Block Class
     def get_new_block(self):
         # TODO make block choice random! (Use random.choice out of the list of blocks) see blocknames array
-        blockname = None
+        blockname = random.choice(Block.blocknames)
         block = Block(self, blockname)
         return block
 

@@ -1,5 +1,6 @@
-import pygame,sys
+import pygame, sys
 from pygame.locals import *
+
 
 class BaseGame():
     def __init__(self):
@@ -140,7 +141,8 @@ class BaseGame():
             self.margin - 3, self.top_margin - 7, (self.board_width * self.box_size) + 8,
             (self.board_height * self.box_size) + 8), 5)
         pygame.draw.rect(self.display, self.background,
-                         (self.margin, self.top_margin, self.box_size * self.board_width, self.box_size * self.board_height))
+                         (self.margin, self.top_margin, self.box_size * self.board_width,
+                          self.box_size * self.board_height))
         for x in range(self.board_width):
             for y in range(self.board_height):
                 self.draw_cell(x, y, self.gameboard[x][y])
