@@ -22,8 +22,8 @@ class Block:
 
     def set_shape(self, shape):
         self.shape = shape
-        self.width = len(shape[0])  # Calculate the correct width
-        self.height = len(shape)  # Calculate the correct height
+        self.width = len(shape[0])
+        self.height = len(shape)
 
     def right_rotation(self, rotation_options):
         # TODO rotate block once clockwise
@@ -61,11 +61,14 @@ class Game(BaseGame):
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
-                        current_block.x += 1
+                        if self.is_block_on_valid_position(current_block, x_change=1):
+                            current_block.x += 1
                     elif event.key == pygame.K_LEFT:
-                        current_block.x -= 1
+                        if self.is_block_on_valid_position(current_block, x_change=-1):
+                            current_block.x -= 1
                     elif event.key == pygame.K_DOWN:
-                        current_block.y += 1
+                        if self.is_block_on_valid_position(current_block, y_change=1):
+                            current_block.y += 1
 
 
             # Draw after game logic
@@ -87,8 +90,39 @@ class Game(BaseGame):
     # Parameters block, x_change (any movement done in X direction), yChange (movement in Y direction)
     # Returns True if no part of the block is outside the Board or collides with another Block
     def is_block_on_valid_position(self, block, x_change=0, y_change=0):
-        # TODO check if block is on valid position after change in x or y direction
+        # check if block is on valid position after change in x or y direction
+        if 0 <= block.x + x_change <= self.board_width - self.get_real_blockwidth(block):
+            if block.y + y_change <= self.board_height - block.height:
+                return True
         return False
+
+    # Checks for empty lines at the beginning and ending of a block
+    # Returns the real width of a block
+    def get_real_blockwidth(self, block):
+        width = block.width
+        pre = ""
+        post = ""
+        for i in range(0, len(block.shape)):
+            pre += block.shape[i][0]
+            post += block.shape[i][len(block.shape[i]) - 1]
+
+        flag = False
+        for char in pre:
+            if char == "x":
+                flag = True
+
+        if not flag:
+            width -= 1
+
+        flag = False
+        for char in post:
+            if char == "x":
+                flag = True
+
+        if not flag:
+            width -= 1
+
+        return width
 
     # Check if the line on y Coordinate is complete
     # Returns True if the line is complete
@@ -105,7 +139,7 @@ class Game(BaseGame):
     # Create a new random block
     # Returns the newly created Block Class
     def get_new_block(self):
-        # TODO make block choice random! (Use random.choice out of the list of blocks) see blocknames array
+        # make block choice random! (Use random.choice out of the list of blocks) see blocknames array
         blockname = random.choice(Block.blocknames)
         block = Block(self, blockname)
         return block
