@@ -4,6 +4,7 @@
 
 import pygame
 import time, random
+import threading
 
 from framework import BaseGame
 
@@ -14,11 +15,13 @@ class Block:
 
     def __init__(self, game, block_name):
         self.name = block_name  # set name / Can be 'hero', 'teewee', ...
-        self.rotation = random.randint(0, len(game.block_list[self.name]) - 1)  # randomize rotation (e.g. 0, 1, 2, 3; Hint: different number of rotations per block)
+        self.rotation = random.randint(0, len(game.block_list[
+                                                  self.name]) - 1)  # randomize rotation (e.g. 0, 1, 2, 3; Hint: different number of rotations per block)
         self.set_shape(game.block_list[self.name][self.rotation])
         self.x = int(game.board_width / 2) - int(self.width / 2)
         self.y = 0
-        self.color = game.block_colors[self.name]  # Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
+        self.color = game.block_colors[
+            self.name]  # Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
 
     def set_shape(self, shape):
         self.shape = shape
@@ -32,7 +35,6 @@ class Block:
     def left_rotation(self, rotation_options):
         # TODO rotate block once counter-clockwise
         pass
-
 
 class Game(BaseGame):
     def run_game(self):
@@ -53,11 +55,13 @@ class Game(BaseGame):
             4: 1200
         }
 
+        worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
+        worker.start()
+
         # GameLoop
         while True:
             self.test_quit_game()
             # TODO Game Logic: implement key events & move blocks (Hint: check if move is valid/block is on the Board)
-
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
@@ -70,7 +74,6 @@ class Game(BaseGame):
                         if self.is_block_on_valid_position(current_block, y_change=1):
                             current_block.y += 1
 
-
             # Draw after game logic
             self.display.fill(self.background)
             self.draw_game_board()
@@ -81,6 +84,16 @@ class Game(BaseGame):
             pygame.display.update()
             self.set_game_speed(self.speed)
             self.clock.tick(self.speed)
+
+    def block_down_thread(self, speed, block):
+        print("Start thread")
+        while True:
+            time.sleep(5/speed)
+            if self.is_block_on_valid_position(block, y_change=1):
+                block.y += 1
+            else:
+                break
+        print("Stopped Thread")
 
     # Check if Coordinate given is on board (returns True/False)
     def is_coordinate_on_board(self, x, y):
