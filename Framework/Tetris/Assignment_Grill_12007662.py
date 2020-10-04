@@ -24,9 +24,38 @@ class Block:
             self.name]  # Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
 
     def set_shape(self, shape):
-        self.shape = shape
+        self.shape = self.get_new_shape(shape)
         self.width = len(shape[0])
         self.height = len(shape)
+
+    def get_new_shape(self, shape):
+        pre = ""
+        post = ""
+        flag_pre = False
+        flag_post = False
+        for i in range(0, len(shape)):
+            pre += shape[i][0]
+            post += shape[i][len(shape[i]) - 1]
+
+        for pre_char in pre:
+            if pre_char == "x":
+                flag_pre = True
+
+        for post_char in post:
+            if post_char == "x":
+                flag_post = True
+
+        if flag_post and flag_pre:
+            return shape
+        else:
+            if not flag_pre:
+                for i in range(0, len(shape)):
+                    shape[i] = shape[i][1:]
+            if not flag_post:
+                for i in range(0, len(shape)):
+                    shape[i] = shape[i][:-1]
+            return shape
+
 
     def right_rotation(self, rotation_options):
         # TODO rotate block once clockwise
@@ -55,8 +84,8 @@ class Game(BaseGame):
             4: 1200
         }
 
-        worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
-        worker.start()
+        # worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
+        # worker.start()
 
         # GameLoop
         while True:
@@ -77,8 +106,9 @@ class Game(BaseGame):
                             self.add_block_to_board(current_block)
                             current_block = next_block
                             next_block = self.get_new_block()
-                            worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
-                            worker.start()
+                            self.remove_complete_line()
+                            # worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
+                            # worker.start()
 
 
             # Draw after game logic
@@ -110,19 +140,19 @@ class Game(BaseGame):
         return False
 
     def block_down_thread(self, speed, block):
-        print("Start thread")
+        # print("Start thread")
         while True:
             time.sleep(5/speed)
             if self.is_block_on_valid_position(block, y_change=1):
                 block.y += 1
             else:
                 break
-        print("Stopped Thread")
+        # print("Stopped Thread")
 
     # Check if Coordinate given is on board (returns True/False)
     def is_coordinate_on_board(self, x, y):
         # check if coordinate is on playingboard (in boundary of self.boardWidth and self.boardHeight)
-        if 0 <= x <= self.board_width and 0 <= y <= self.board_height:
+        if 0 <= x < self.board_width and 0 <= y < self.board_height:
             return True
         return False
 
@@ -132,7 +162,8 @@ class Game(BaseGame):
         # check if block is on valid position after change in x or y direction
         x = block.x + x_change
         y = block.y + y_change
-        if 0 <= x <= self.board_width - self.get_real_blockwidth(block):
+
+        if 0 <= x <= self.board_width - block.width:
             if y <= self.board_height - block.height:
                 for i in range(0, block.height):
                     for j in range(0, block.width):
@@ -140,50 +171,37 @@ class Game(BaseGame):
                             if self.board[y][x] == "x":
                                 return False
                         x += 1
-                    x = block.x
+                    x = block.x + x_change
                     y += 1
                 return True
+
         return False
-
-    # Checks for empty lines at the beginning and ending of a block
-    # Returns the real width of a block
-    def get_real_blockwidth(self, block):
-        width = block.width
-        pre = ""
-        post = ""
-        for i in range(0, len(block.shape)):
-            pre += block.shape[i][0]
-            post += block.shape[i][len(block.shape[i]) - 1]
-
-        flag = False
-        for char in pre:
-            if char == "x":
-                flag = True
-
-        if not flag:
-            width -= 1
-
-        flag = False
-        for char in post:
-            if char == "x":
-                flag = True
-
-        if not flag:
-            width -= 1
-
-        return width
 
     # Check if the line on y Coordinate is complete
     # Returns True if the line is complete
     def check_line_complete(self, y_coord):
-        # TODO check if line on yCoord is complete and can be removed
-        return False
+        # check if line on yCoord is complete and can be removed
+        for char in self.board[y_coord]:
+            if char == ".":
+                return False
+        return True
 
     # Go over all lines and remove those, which are complete
     # Returns Number of complete lines removed
     def remove_complete_line(self):
         # TODO go over all lines and check if one can be removed
-        return 0
+        count = 0
+        for line_index in range(0, len(self.board)):
+            if self.check_line_complete(line_index):
+                for replace_index in range(line_index, 0, -1):
+                    print(replace_index)
+                    self.board[replace_index] = self.board[replace_index - 1]
+                    self.gameboard[replace_index] = self.gameboard[replace_index - 1]
+                for first_row_index in range(0, len(self.board[0])):
+                    self.board[0][first_row_index] = "."
+                    self.gameboard[0][first_row_index] = "."
+                count += 1
+        return count
 
     # Create a new random block
     # Returns the newly created Block Class

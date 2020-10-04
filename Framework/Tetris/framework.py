@@ -97,9 +97,9 @@ class BaseGame:
                         'x..'],
                        ['xxx',
                         '.x.'],
-                       ['..x',
-                        '.xx',
-                        '..x']
+                       ['.x',
+                        'xx',
+                        '.x']
                        ],
             'smashBoy': [['xx',
                           'xx']
