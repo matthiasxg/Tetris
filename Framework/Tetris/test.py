@@ -1,5 +1,5 @@
 import unittest, pygame
-from Assignment_Grill_12007662 import Block, Game
+from Assignment_Lastname_StudentID import Block, Game
 
 
 class TestBlock(unittest.TestCase):

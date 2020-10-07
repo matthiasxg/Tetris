@@ -1,9 +1,7 @@
-import pygame
-import sys
+import pygame,sys
 from pygame.locals import *
 
-
-class BaseGame:
+class BaseGame():
     def __init__(self):
 
         self.block_colors = {
@@ -64,25 +62,25 @@ class BaseGame:
                           ],
             'clevelandZ': [['xx.',
                             '.xx'],
-                           ['.x.',
-                            'xx.',
-                            'x..'],
+                           ['.x',
+                            'xx',
+                            'x.'],
                            ['xx.',
                             '.xx'],
-                           ['..x',
-                            '.xx',
-                            '.x.']
+                           ['.x',
+                            'xx',
+                            'x.']
                            ],
             'rhodeIslandZ': [['.xx',
                               'xx.'],
-                             ['x..',
-                              'xx.',
-                              '.x.'],
+                             ['x.',
+                              'xx',
+                              '.x'],
                              ['.xx',
                               'xx.'],
-                             ['.x.',
-                              '.xx',
-                              '..x']
+                             ['x.',
+                              'xx',
+                              '.x']
                              ],
             'hero': [['xxxx'],
                      ['x',
@@ -92,9 +90,9 @@ class BaseGame:
                      ],
             'teewee': [['.x.',
                         'xxx'],
-                       ['x..',
-                        'xx.',
-                        'x..'],
+                       ['x.',
+                        'xx',
+                        'x.'],
                        ['xxx',
                         '.x.'],
                        ['.x',

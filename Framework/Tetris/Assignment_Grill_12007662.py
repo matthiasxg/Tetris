@@ -24,46 +24,29 @@ class Block:
             self.name]  # Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
 
     def set_shape(self, shape):
-        self.shape = self.get_new_shape(shape)
+        self.shape = shape
         self.width = len(shape[0])
         self.height = len(shape)
 
-    def get_new_shape(self, shape):
-        pre = ""
-        post = ""
-        flag_pre = False
-        flag_post = False
-        for i in range(0, len(shape)):
-            pre += shape[i][0]
-            post += shape[i][len(shape[i]) - 1]
-
-        for pre_char in pre:
-            if pre_char == "x":
-                flag_pre = True
-
-        for post_char in post:
-            if post_char == "x":
-                flag_post = True
-
-        if flag_post and flag_pre:
-            return shape
-        else:
-            if not flag_pre:
-                for i in range(0, len(shape)):
-                    shape[i] = shape[i][1:]
-            if not flag_post:
-                for i in range(0, len(shape)):
-                    shape[i] = shape[i][:-1]
-            return shape
-
 
     def right_rotation(self, rotation_options):
-        # TODO rotate block once clockwise
-        pass
+        # rotate block once clockwise
+        if self.rotation == len(rotation_options) - 1:
+            self.set_shape(rotation_options[0])
+            self.rotation = 0
+        else:
+            self.set_shape(rotation_options[self.rotation + 1])
+            self.rotation += 1
+
 
     def left_rotation(self, rotation_options):
-        # TODO rotate block once counter-clockwise
-        pass
+        # rotate block once counter-clockwise
+        if self.rotation == 0:
+            self.set_shape(rotation_options[len(rotation_options) - 1])
+            self.rotation = len(rotation_options) - 1
+        else:
+            self.set_shape(rotation_options[self.rotation - 1])
+            self.rotation -= 1
 
 class Game(BaseGame):
     def run_game(self):
@@ -107,8 +90,12 @@ class Game(BaseGame):
                             current_block = next_block
                             next_block = self.get_new_block()
                             self.remove_complete_line()
-                            # worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
-                            # worker.start()
+                    elif event.key == pygame.K_q:
+                        current_block.left_rotation(self.block_list[current_block.name])
+                    elif event.key == pygame.K_e:
+                        current_block.right_rotation(self.block_list[current_block.name])
+                    elif event.key == pygame.K_p:
+                        self.pause_game()
 
 
             # Draw after game logic
@@ -121,6 +108,14 @@ class Game(BaseGame):
             pygame.display.update()
             self.set_game_speed(self.speed)
             self.clock.tick(self.speed)
+
+    def pause_game(self):
+        self.show_text("Paused")
+        while True:
+            wait_event = pygame.event.wait()
+            if wait_event.type == pygame.KEYDOWN:
+                if wait_event.key == pygame.K_p:
+                    break
 
     def check_block_done(self, block):
         if block.y == self.board_height - block.height:
@@ -194,7 +189,6 @@ class Game(BaseGame):
         for line_index in range(0, len(self.board)):
             if self.check_line_complete(line_index):
                 for replace_index in range(line_index, 0, -1):
-                    print(replace_index)
                     self.board[replace_index] = self.board[replace_index - 1]
                     self.gameboard[replace_index] = self.gameboard[replace_index - 1]
                 for first_row_index in range(0, len(self.board[0])):
@@ -236,6 +230,7 @@ class Game(BaseGame):
     # calculate new Level after the score has changed
     # TODO calculate new level
     def calculate_new_level(self, score):
+        # The level generally corresponds to the score divided by 300 points.
         # The level generally corresponds to the score divided by 300 points.
         # 300 -> level 1; 600 -> level 2; 900 -> level 3
         # TODO increase gamespeed by 1 on level up only
