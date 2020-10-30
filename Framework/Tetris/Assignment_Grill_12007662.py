@@ -4,7 +4,6 @@
 
 import pygame
 import time, random
-import threading
 
 from framework import BaseGame
 
@@ -28,7 +27,6 @@ class Block:
         self.width = len(shape[0])
         self.height = len(shape)
 
-
     def right_rotation(self, rotation_options):
         # rotate block once clockwise
         if self.rotation == len(rotation_options) - 1:
@@ -37,7 +35,6 @@ class Block:
         else:
             self.set_shape(rotation_options[self.rotation + 1])
             self.rotation += 1
-
 
     def left_rotation(self, rotation_options):
         # rotate block once counter-clockwise
@@ -48,10 +45,12 @@ class Block:
             self.set_shape(rotation_options[self.rotation - 1])
             self.rotation -= 1
 
+
 class Game(BaseGame):
     def run_game(self):
         self.board = self.get_empty_board()
         fall_time = time.time()
+        start_speed = self.speed
 
         current_block = self.get_new_block()
         next_block = self.get_new_block()
@@ -67,9 +66,6 @@ class Game(BaseGame):
             4: 1200
         }
 
-        # worker = threading.Thread(target=self.block_down_thread, args=(self.speed, current_block))
-        # worker.start()
-
         # GameLoop
         while True:
             self.test_quit_game()
@@ -83,13 +79,8 @@ class Game(BaseGame):
                         if self.is_block_on_valid_position(current_block, x_change=-1):
                             current_block.x -= 1
                     elif event.key == pygame.K_DOWN:
-                        if self.is_block_on_valid_position(current_block, y_change=1):
+                        while self.is_block_on_valid_position(current_block, y_change=1):
                             current_block.y += 1
-                        if self.check_block_done(current_block):
-                            self.add_block_to_board(current_block)
-                            current_block = next_block
-                            next_block = self.get_new_block()
-                            self.remove_complete_line()
                     elif event.key == pygame.K_q:
                         current_block.left_rotation(self.block_list[current_block.name])
                     elif event.key == pygame.K_e:
@@ -97,6 +88,16 @@ class Game(BaseGame):
                     elif event.key == pygame.K_p:
                         self.pause_game()
 
+            if self.is_block_on_valid_position(current_block, y_change=1):
+                current_block.y += 1
+            if self.check_block_done(current_block):
+                self.add_block_to_board(current_block)
+                current_block = next_block
+                next_block = self.get_new_block()
+                if not self.is_block_on_valid_position(current_block):
+                    return False
+                self.remove_complete_line()
+                self.speed = start_speed
 
             # Draw after game logic
             self.display.fill(self.background)
@@ -133,16 +134,6 @@ class Game(BaseGame):
             y += 1
 
         return False
-
-    def block_down_thread(self, speed, block):
-        # print("Start thread")
-        while True:
-            time.sleep(5/speed)
-            if self.is_block_on_valid_position(block, y_change=1):
-                block.y += 1
-            else:
-                break
-        # print("Stopped Thread")
 
     # Check if Coordinate given is on board (returns True/False)
     def is_coordinate_on_board(self, x, y):
@@ -201,8 +192,8 @@ class Game(BaseGame):
     # Returns the newly created Block Class
     def get_new_block(self):
         # make block choice random! (Use random.choice out of the list of blocks) see blocknames array
-        blockname = random.choice(Block.blocknames)
-        block = Block(self, blockname)
+        block_name = random.choice(Block.blocknames)
+        block = Block(self, block_name)
         return block
 
     def add_block_to_board(self, block):

@@ -117,7 +117,7 @@ class BaseGame():
         self.top_margin = self.window_height - (self.board_height * self.box_size) - 5
         self.display = 0
         self.clock = 0
-        self.speed = 5
+        self.speed = 2
         self.font = pygame.font.Font('freesansbold.ttf', 18)
         self.big_font = pygame.font.Font('freesansbold.ttf', 40)
         self.gameboard = self.get_empty_board()
