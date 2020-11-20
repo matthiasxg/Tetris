@@ -7,20 +7,18 @@ import time, random
 
 from framework import BaseGame
 
-
-# Recommended Start: init function of Block Class
 class Block:
     blocknames = ['clevelandZ', 'rhodeIslandZ', 'blueRicky', 'smashBoy', 'orangeRicky', 'teewee', 'hero']
 
     def __init__(self, game, block_name):
-        self.name = block_name  # set name / Can be 'hero', 'teewee', ...
+        self.name = block_name
         self.rotation = random.randint(0, len(game.block_list[
-                                                  self.name]) - 1)  # randomize rotation (e.g. 0, 1, 2, 3; Hint: different number of rotations per block)
+                                                  self.name]) - 1)
         self.set_shape(game.block_list[self.name][self.rotation])
         self.x = int(game.board_width / 2) - int(self.width / 2)
         self.y = 0
         self.color = game.block_colors[
-            self.name]  # Set Color correctly / Can be 'red', 'green', ... (see self.blockColors)
+            self.name]
 
     def set_shape(self, shape):
         self.shape = shape
@@ -48,16 +46,13 @@ class Block:
 
 class Game(BaseGame):
     def run_game(self):
-        self.board = self.get_empty_board()
-        fall_time = time.time()
-        start_speed = self.speed
+
+        self.level = 0
 
         current_block = self.get_new_block()
         next_block = self.get_new_block()
 
-        # TODO Fill in the score dictionary
         #  Maps "lines removed" to "raw points gained"
-        #  0 lines: 0 points; 1 line: 40 points; 2 lines: 100 points; 3 lines: 300 points; 4 lines: 1200 points
         self.score_dictionary = {
             0: 0,
             1: 40,
@@ -69,7 +64,8 @@ class Game(BaseGame):
         # GameLoop
         while True:
             self.test_quit_game()
-            # TODO Game Logic: implement key events & move blocks (Hint: check if move is valid/block is on the Board)
+
+            # game logic
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
@@ -90,14 +86,21 @@ class Game(BaseGame):
 
             if self.is_block_on_valid_position(current_block, y_change=1):
                 current_block.y += 1
+
             if self.check_block_done(current_block):
                 self.add_block_to_board(current_block)
                 current_block = next_block
                 next_block = self.get_new_block()
+
+                # check game over
                 if not self.is_block_on_valid_position(current_block):
                     return False
-                self.remove_complete_line()
-                self.speed = start_speed
+
+                removed_lines = self.remove_complete_line()
+                new_score = self.calculate_new_score(removed_lines, self.level)
+                self.calculate_new_level(new_score)
+                self.score = new_score
+
 
             # Draw after game logic
             self.display.fill(self.background)
@@ -127,7 +130,7 @@ class Game(BaseGame):
         for i in range(0, block.height):
             for j in range(0, block.width):
                 if block.shape[i][j] == "x":
-                    if self.board[y + 1][x] == "x":
+                    if self.gameboard[y + 1][x] != self.blank_color:
                         return True
                 x += 1
             x = block.x
@@ -154,7 +157,7 @@ class Game(BaseGame):
                 for i in range(0, block.height):
                     for j in range(0, block.width):
                         if block.shape[i][j] == "x":
-                            if self.board[y][x] == "x":
+                            if self.gameboard[y][x] != self.blank_color:
                                 return False
                         x += 1
                     x = block.x + x_change
@@ -167,25 +170,24 @@ class Game(BaseGame):
     # Returns True if the line is complete
     def check_line_complete(self, y_coord):
         # check if line on yCoord is complete and can be removed
-        for char in self.board[y_coord]:
-            if char == ".":
+        for char in self.gameboard[y_coord]:
+            if char == self.blank_color:
                 return False
         return True
 
     # Go over all lines and remove those, which are complete
     # Returns Number of complete lines removed
     def remove_complete_line(self):
-        # TODO go over all lines and check if one can be removed
+        # go over all lines and check if one can be removed
         count = 0
-        for line_index in range(0, len(self.board)):
+        for line_index in range(0, len(self.gameboard)):
             if self.check_line_complete(line_index):
-                for replace_index in range(line_index, 0, -1):
-                    self.board[replace_index] = self.board[replace_index - 1]
-                    self.gameboard[replace_index] = self.gameboard[replace_index - 1]
-                for first_row_index in range(0, len(self.board[0])):
-                    self.board[0][first_row_index] = "."
-                    self.gameboard[0][first_row_index] = "."
+                for replace_index in range(line_index, 1, -1):
+                    self.gameboard[replace_index] = self.gameboard[replace_index - 1][:]
+                for first_row_index in range(0, len(self.gameboard[0])):
+                    self.gameboard[0][first_row_index] = self.blank_color
                 count += 1
+
         return count
 
     # Create a new random block
@@ -198,13 +200,12 @@ class Game(BaseGame):
 
     def add_block_to_board(self, block):
         # once block is not falling, place it on the gameboard
-        #  add Block to the designated Location on the board once it stopped moving
+        # add Block to the designated Location on the board once it stopped moving
         x = block.x
         y = block.y
-        for i in range(0, block.height):
-            for j in range(0, block.width):
-                if block.shape[i][j] == "x":
-                    self.board[y][x] = "x"
+        for row in range(0, block.height):
+            for column in range(0, block.width):
+                if block.shape[row][column] == 'x':
                     self.gameboard[y][x] = block.color
                 x += 1
             x = block.x
@@ -212,27 +213,26 @@ class Game(BaseGame):
 
     # calculate new Score after a line has been removed
     def calculate_new_score(self, lines_removed, level):
-        # TODO calculate new score
         # Points gained: Points per line removed at once times the level modifier!
         # Points per lines removed corresponds to the score_directory
         # The level modifier is 1 higher than the current level.
-        pass
+        if lines_removed == 0:
+            return self.score
+        return self.score + self.score_dictionary[lines_removed] * (level + 1)
 
     # calculate new Level after the score has changed
-    # TODO calculate new level
     def calculate_new_level(self, score):
         # The level generally corresponds to the score divided by 300 points.
-        # The level generally corresponds to the score divided by 300 points.
         # 300 -> level 1; 600 -> level 2; 900 -> level 3
-        # TODO increase gamespeed by 1 on level up only
-        pass
+        old_level = self.score // 300
+        self.level = score // 300
+        if self.level > old_level:
+            self.set_game_speed(self.speed + 1)
 
     # set the current game speed
     def set_game_speed(self, speed):
-        # TODO set the correct game speed!
         # It starts as defined in base.py and should increase by 1 after a level up.
-        pass
-
+        self.speed = speed
 
 # -------------------------------------------------------------------------------------
 # Do not modify the code below, your implementation should be done above
