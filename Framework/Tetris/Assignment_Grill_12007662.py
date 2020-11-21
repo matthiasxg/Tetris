@@ -106,6 +106,7 @@ class Game(BaseGame):
             self.display.fill(self.background)
             self.draw_game_board()
             self.draw_score()
+            self.draw_level()
             self.draw_next_block(next_block)
             if current_block != None:
                 self.draw_block(current_block)
