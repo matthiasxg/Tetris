@@ -3,7 +3,7 @@
 # Student ID: 12007662
 
 import pygame
-import time, random
+import random
 
 from framework import BaseGame
 
@@ -68,21 +68,27 @@ class Game(BaseGame):
             # game logic
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_RIGHT: # Right
                         if self.is_block_on_valid_position(current_block, x_change=1):
                             current_block.x += 1
-                    elif event.key == pygame.K_LEFT:
+                    elif event.key == pygame.K_LEFT: # Left
                         if self.is_block_on_valid_position(current_block, x_change=-1):
                             current_block.x -= 1
-                    elif event.key == pygame.K_DOWN:
-                        while self.is_block_on_valid_position(current_block, y_change=1):
-                            current_block.y += 1
-                    elif event.key == pygame.K_q:
+                    elif event.key == pygame.K_DOWN: # Down
+                        self.set_game_speed(self.speed * 2) # speeeed upp
+                    elif event.key == pygame.K_q: # Left rotation
                         current_block.left_rotation(self.block_list[current_block.name])
-                    elif event.key == pygame.K_e:
+                        if not self.is_block_on_valid_position(current_block):
+                            current_block.right_rotation(self.block_list[current_block.name])
+                    elif event.key == pygame.K_e: # Right rotation
                         current_block.right_rotation(self.block_list[current_block.name])
-                    elif event.key == pygame.K_p:
+                        if not self.is_block_on_valid_position(current_block):
+                            current_block.left_rotation(self.block_list[current_block.name])
+                    elif event.key == pygame.K_p: # Pause Game
                         self.pause_game()
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_DOWN:
+                        self.set_game_speed(self.speed / 2) # speed down
 
             if self.is_block_on_valid_position(current_block, y_change=1):
                 current_block.y += 1
@@ -94,12 +100,10 @@ class Game(BaseGame):
 
                 # check game over
                 if not self.is_block_on_valid_position(current_block):
-                    return False
+                    self.show_text('Game Over');
+                    return True
 
-                removed_lines = self.remove_complete_line()
-                new_score = self.calculate_new_score(removed_lines, self.level)
-                self.calculate_new_level(new_score)
-                self.score = new_score
+                self.remove_complete_line()
 
 
             # Draw after game logic
@@ -114,14 +118,11 @@ class Game(BaseGame):
             self.set_game_speed(self.speed)
             self.clock.tick(self.speed)
 
+    # Pauses the game
     def pause_game(self):
         self.show_text("Paused")
-        while True:
-            wait_event = pygame.event.wait()
-            if wait_event.type == pygame.KEYDOWN:
-                if wait_event.key == pygame.K_p:
-                    break
 
+    # check if the block is on the floor / another block
     def check_block_done(self, block):
         if block.y == self.board_height - block.height:
             return True
@@ -189,6 +190,10 @@ class Game(BaseGame):
                     self.gameboard[0][first_row_index] = self.blank_color
                 count += 1
 
+        new_score = self.calculate_new_score(count, self.level)
+        self.calculate_new_level(new_score)
+        self.score = new_score
+
         return count
 
     # Create a new random block
@@ -199,6 +204,7 @@ class Game(BaseGame):
         block = Block(self, block_name)
         return block
 
+    # adds the done block the the gameboard array
     def add_block_to_board(self, block):
         # once block is not falling, place it on the gameboard
         # add Block to the designated Location on the board once it stopped moving
@@ -249,8 +255,6 @@ def main():
     game.show_text('Tetris')
 
     game.run_game()
-    game.show_text('Game Over')
-
 
 if __name__ == '__main__':
     main()
